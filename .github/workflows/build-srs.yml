@@ -61,7 +61,6 @@ jobs:
           git push
 
       - name: Publish GitHub Release with .srs assets
-        if: steps.diff.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
