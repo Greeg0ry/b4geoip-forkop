@@ -1,0 +1,20 @@
+{
+  "input": [
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "add",
+      "args": {
+        "uri": "./geoip.dat"
+      }
+    }
+  ],
+  "output": [
+    {
+      "type": "singboxSRS",
+      "action": "output",
+      "args": {
+        "outputDir": "./srs"
+      }
+    }
+  ]
+}
