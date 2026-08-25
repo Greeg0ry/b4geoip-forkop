@@ -42,14 +42,30 @@ jobs:
       - name: Clean up downloaded files
         run: rm -f geoip.dat geoip.dat.sha256sum
 
-      - name: Commit and push if changed
+      - name: Check for changes
+        id: diff
+        run: |
+          git add srs
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add srs
-          if git diff --cached --quiet; then
-            echo "No changes in .srs rule-sets"
-            exit 0
-          fi
           git commit -m "chore(srs): update sing-box rule-sets from b4geoip ($(date -u +%F))"
           git push
+
+      - name: Publish GitHub Release with .srs assets
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(TZ=Europe/Moscow date +'%Y-%m-%d_%H-%M')"
+          gh release create "$tag" srs/*.srs \
+            --title "$tag" \
+            --notes "Собрано из последнего geoip.dat: https://github.com/DanielLavrushin/b4geoip/releases/latest"

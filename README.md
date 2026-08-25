@@ -15,8 +15,11 @@
 
 ## Как подключить в sing-box
 
-Каждый файл в каталоге [`srs/`](./srs) — готовый rule-set с CIDR одной
-категории (`geoip:<name>` из b4geoip). Подключается как `remote` rule-set:
+Каждый файл — готовый rule-set с CIDR одной категории (`geoip:<name>` из
+b4geoip). Есть два источника, оба обновляются одним и тем же workflow:
+
+**1. Файлы в репозитории** ([`srs/`](./srs), всегда актуальная версия на
+`main`):
 
 ```json
 {
@@ -27,6 +30,29 @@
         "tag": "geoip-telegram",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/Greeg0ry/b4geoip-forkop/main/srs/telegram.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      }
+    ]
+  }
+}
+```
+
+**2. Ассеты в [Releases](../../releases)** — как у
+[itdoginfo/allow-domains](https://github.com/itdoginfo/allow-domains).
+Каждый успешный запуск публикует новый релиз с тем же набором `.srs` в
+качестве ассетов; `.../releases/latest/download/<name>.srs` всегда указывает
+на файлы из последнего релиза:
+
+```json
+{
+  "route": {
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "geoip-telegram",
+        "format": "binary",
+        "url": "https://github.com/Greeg0ry/b4geoip-forkop/releases/latest/download/telegram.srs",
         "download_detour": "direct",
         "update_interval": "1d"
       }
