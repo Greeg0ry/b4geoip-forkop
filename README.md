@@ -40,24 +40,25 @@
 ## Категории
 
 `geoip.dat` от b4geoip расширяет базу
-[RUNETFREEDOM](https://github.com/runetfreedom/russia-blocked-geoip), поэтому
-в `srs/` оказывается ~300 файлов:
+[RUNETFREEDOM](https://github.com/runetfreedom/russia-blocked-geoip) полным
+набором кодов стран ISO 3166-1 и служебными списками (`tor`, `private`,
+`ru-blocked` и т.п.) — но сюда, в `srs/`, попадают **только** оригинальные
+сервисные категории самого b4geoip (список зафиксирован в `wantedList`
+внутри [`srs-config.json`](./srs-config.json)):
 
-- коды стран ISO 3166-1 alpha-2 из базы RUNETFREEDOM (`ru.srs`, `us.srs`,
-  `de.srs`, …), плюс служебные списки вроде `tor.srs`;
-- сервисные категории самого b4geoip:
-  - **Gaming:** blizzard, bungie, ccp, electronicarts, epicgames, nintendo,
-    play2go, riot, roblox, sony, taketwo, ubisoft, valve, wargaming
-  - **Cloud / CDN:** aeza, akamai, amazon, belcloud, buyvm, cdn77,
-    cloudflare, cogent, constant, contabo, datacamp, digitalocean,
-    digitalone, fastly, gcore, glesys, gthost, hetzner, meganz, melbicom,
-    oracle, ovh, scalaxy, scaleway, vercel, zerocdn
-  - **Tech:** adobe, anthropic, apple, github, google, meta
-  - **Messaging:** telegram
+- **Gaming:** blizzard, bungie, ccp, electronicarts, epicgames, nintendo,
+  play2go, riot, roblox, sony, taketwo, ubisoft, valve, wargaming
+- **Cloud / CDN:** aeza, akamai, amazon, belcloud, buyvm, cdn77,
+  cloudflare, cogent, constant, contabo, datacamp, digitalocean,
+  digitalone, fastly, gcore, glesys, gthost, hetzner, meganz, melbicom,
+  oracle, ovh, scalaxy, scaleway, vercel, zerocdn
+- **Tech:** adobe, anthropic, apple, github, google, meta
+- **Messaging:** telegram
 
-Список файлов в точности повторяет содержимое очередного `geoip.dat` — если
-в исходной базе появится новая категория или страна, при следующем запуске
-здесь появится соответствующий `.srs`-файл автоматически.
+Итого 47 файлов `.srs`. Страновые списки (`ru.srs`, `us.srs`, …) и прочие
+данные, унаследованные от RUNETFREEDOM, намеренно не публикуются. Если
+b4geoip добавит новую категорию в этот же набор, её нужно будет вручную
+дописать в `wantedList` — автоматически новые категории не подхватываются.
 
 ## Ручной запуск
 
