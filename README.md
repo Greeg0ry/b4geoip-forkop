@@ -8,8 +8,7 @@
   cloudflare, cogent, constant, contabo, datacamp, digitalocean,
   digitalone, fastly, gcore, glesys, gthost, hetzner, meganz, melbicom,
   oracle, ovh, scalaxy, scaleway, vercel, zerocdn
-- **Tech:** adobe, anthropic, apple, github, google, meta
-- **Messaging:** telegram
+- **Tech:** adobe, anthropic, apple, google
 
 ## Подключение в sing-box
 
@@ -19,9 +18,9 @@
     "rule_set": [
       {
         "type": "remote",
-        "tag": "geoip-telegram",
+        "tag": "geoip-cloudflare",
         "format": "binary",
-        "url": "https://github.com/Greeg0ry/b4geoip-forkop/releases/latest/download/telegram.srs",
+        "url": "https://github.com/Greeg0ry/b4geoip-forkop/releases/latest/download/cloudflare.srs",
         "download_detour": "direct",
         "update_interval": "1d"
       }
@@ -30,7 +29,7 @@
 }
 ```
 
-Замените `telegram` на нужный список из раздела выше.
+Замените `cloudflare` на нужный список из раздела выше.
 
 ## Постоянная ссылка на скачивание
 

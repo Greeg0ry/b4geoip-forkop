@@ -58,10 +58,7 @@
           "adobe",
           "anthropic",
           "apple",
-          "github",
-          "google",
-          "meta",
-          "telegram"
+          "google"
         ]
       }
     }
