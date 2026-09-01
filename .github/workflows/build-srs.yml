@@ -28,6 +28,9 @@ jobs:
       - name: Install geoip converter (Loyalsoldier/geoip)
         run: go install github.com/Loyalsoldier/geoip@master
 
+      - name: Install sing-box (for rule-set compile)
+        run: go install github.com/sagernet/sing-box/cmd/sing-box@latest
+
       - name: Download latest b4geoip release
         run: |
           curl -fsSL -o geoip.dat https://github.com/DanielLavrushin/b4geoip/releases/latest/download/geoip.dat
@@ -41,6 +44,21 @@ jobs:
 
       - name: Clean up downloaded files
         run: rm -f geoip.dat geoip.dat.sha256sum
+
+      - name: Build xbox rule-set (geosite:xbox from geoexport.org)
+        run: |
+          curl -fsSL -o xbox-domains.txt \
+            "https://geoexport.org/api/export?category=geosite%3Axbox&type=domains%2Cip4%2Cip6&format=plain-lines&source=runetfreedom"
+          python3 - <<'PY'
+          import json
+          with open("xbox-domains.txt") as f:
+              domains = sorted({line.strip() for line in f if line.strip()})
+          data = {"version": 2, "rules": [{"domain_suffix": domains}]}
+          with open("xbox-source.json", "w") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+          PY
+          sing-box rule-set compile xbox-source.json -o srs/xbox.srs
+          rm -f xbox-domains.txt xbox-source.json
 
       - name: Check for changes
         id: diff

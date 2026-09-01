@@ -3,11 +3,7 @@
 ## Списки
 
 - **Gaming:** blizzard, bungie, ccp, electronicarts, epicgames, nintendo,
-  play2go, riot, roblox, sony, taketwo, ubisoft, valve, wargaming
-- **Cloud / CDN:** aeza, akamai, amazon, belcloud, buyvm, cdn77,
-  cloudflare, cogent, constant, contabo, datacamp, digitalocean,
-  digitalone, fastly, gcore, glesys, gthost, hetzner, meganz, melbicom,
-  oracle, ovh, scalaxy, scaleway, vercel, zerocdn
+  play2go, riot, roblox, sony, taketwo, ubisoft, valve, wargaming, xbox
 - **Tech:** adobe, anthropic, apple, google
 
 ## Подключение в sing-box
