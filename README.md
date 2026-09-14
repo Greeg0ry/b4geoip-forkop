@@ -5,6 +5,7 @@
 - **Gaming:** blizzard, bungie, ccp, electronicarts, epicgames, nintendo,
   play2go, riot, roblox, sony, taketwo, ubisoft, valve, wargaming, xbox
 - **Tech:** adobe, anthropic, apple, google
+- **Streaming:** twitch
 
 ## Подключение в sing-box
 

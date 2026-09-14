@@ -60,6 +60,36 @@ jobs:
           sing-box rule-set compile xbox-source.json -o srs/xbox.srs
           rm -f xbox-domains.txt xbox-source.json
 
+      - name: Build twitch rule-set (v2fly domain-list-community)
+        run: |
+          curl -fsSL -o twitch-domains.txt \
+            "https://raw.githubusercontent.com/v2fly/domain-list-community/master/data/twitch"
+          python3 - <<'PY'
+          suffixes = set()
+          full = set()
+          with open("twitch-domains.txt") as f:
+              for line in f:
+                  line = line.split("#", 1)[0].strip()
+                  if not line:
+                      continue
+                  if line.startswith("full:"):
+                      full.add(line[len("full:"):])
+                  elif ":" not in line:
+                      suffixes.add(line)
+
+          import json
+          rules = []
+          if suffixes:
+              rules.append({"domain_suffix": sorted(suffixes)})
+          if full:
+              rules.append({"domain": sorted(full)})
+          data = {"version": 2, "rules": rules}
+          with open("twitch-source.json", "w") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+          PY
+          sing-box rule-set compile twitch-source.json -o srs/twitch.srs
+          rm -f twitch-domains.txt twitch-source.json
+
       - name: Check for changes
         id: diff
         run: |
