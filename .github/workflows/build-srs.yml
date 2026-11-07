@@ -1,6 +1,14 @@
-name: Build sing-box rule-sets from b4geoip
+name: Build sing-box rule-sets
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build-srs.yml
+      - srs-config.json
+      - game-sources.json
+      - scripts/**
+      - tests/**
   schedule:
     # 00:00 Europe/Moscow (UTC+3, no DST) == 21:00 UTC the previous day
     - cron: '0 21 * * *'
@@ -19,6 +27,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Test game list conversion
+        run: python3 -m unittest discover -s tests -v
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -90,6 +101,9 @@ jobs:
           sing-box rule-set compile twitch-source.json -o srs/twitch.srs
           rm -f twitch-domains.txt twitch-source.json
 
+      - name: Build game rule-sets (ru-gaming-blocklist)
+        run: python3 scripts/build_game_rulesets.py
+
       - name: Check for changes
         id: diff
         run: |
@@ -105,7 +119,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(srs): update sing-box rule-sets from b4geoip ($(date -u +%F))"
+          git commit -m "chore(srs): update sing-box rule-sets ($(date -u +%F))"
           git push
 
       - name: Publish GitHub Release with .srs assets
@@ -115,4 +129,4 @@ jobs:
           tag="$(TZ=Europe/Moscow date +'%Y-%m-%d_%H-%M')"
           gh release create "$tag" srs/*.srs \
             --title "$tag" \
-            --notes "Собрано из последнего geoip.dat: https://github.com/DanielLavrushin/b4geoip/releases/latest"
+            --notes "Источники: https://github.com/DanielLavrushin/b4geoip/releases/latest, https://github.com/YOZH3G/ru-gaming-blocklist, geoexport.org (Xbox), v2fly/domain-list-community (Twitch)."

@@ -1,0 +1,38 @@
+{
+  "repository": "YOZH3G/ru-gaming-blocklist",
+  "ref": "main",
+  "merge": {
+    "blizzard": ["BattleNet.txt"],
+    "electronicarts": ["EA_Origin.txt"],
+    "epicgames": ["EpicGames_Fortnite.txt"],
+    "riot": ["LeagueOfLegends.txt", "RiotGames_Valorant.txt"],
+    "roblox": ["Roblox.txt"],
+    "ubisoft": ["Ubisoft_Rainbow_Six_Siege.txt"],
+    "valve": ["Steam.txt"]
+  },
+  "files": [
+    "ApexLegends_RocketLeague.txt",
+    "Arknights.txt",
+    "ArmaReforger.txt",
+    "Battlefield6.txt",
+    "BlueArchive.txt",
+    "CallOfDuty.txt",
+    "CompanyOfHeroes2.txt",
+    "Darktide.txt",
+    "DeadByDaylight.txt",
+    "Fallout76_AWS.txt",
+    "GearsOfWar.txt",
+    "GooseGooseDuck.txt",
+    "MagicTheGathering.txt",
+    "Minecraft_Extra.txt",
+    "MortalKombat1.txt",
+    "MortalKombat11.txt",
+    "OutlastTrials.txt",
+    "PhotonEngine.txt",
+    "StreetFighter6.txt",
+    "VRChat.txt",
+    "Wardogs.txt",
+    "Warframe.txt",
+    "WutheringWaves.txt"
+  ]
+}

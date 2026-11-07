@@ -1,3 +1,4 @@
 geoip.dat
 geoip.dat.sha256sum
 .idea/
+__pycache__/
