@@ -71,6 +71,22 @@ jobs:
           sing-box rule-set compile xbox-source.json -o srs/xbox.srs
           rm -f xbox-domains.txt xbox-source.json
 
+      - name: Build slack rule-set (geosite:slack from geoexport.org, v2fly)
+        run: |
+          curl -fsSL -o slack-domains.txt \
+            "https://geoexport.org/api/export?category=geosite%3Aslack&type=domains&format=plain-lines&source=v2fly"
+          python3 - <<'PY'
+          import json
+          from scripts.build_game_rulesets import parse_list
+
+          with open("slack-domains.txt") as f:
+              data = parse_list(f.read())
+          with open("slack-source.json", "w") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+          PY
+          sing-box rule-set compile slack-source.json -o srs/slack.srs
+          rm -f slack-domains.txt slack-source.json
+
       - name: Build twitch rule-set (v2fly domain-list-community)
         run: |
           curl -fsSL -o twitch-domains.txt \
@@ -129,4 +145,4 @@ jobs:
           tag="$(TZ=Europe/Moscow date +'%Y-%m-%d_%H-%M')"
           gh release create "$tag" srs/*.srs \
             --title "$tag" \
-            --notes "Источники: https://github.com/DanielLavrushin/b4geoip/releases/latest, https://github.com/YOZH3G/ru-gaming-blocklist, geoexport.org (Xbox), v2fly/domain-list-community (Twitch)."
+            --notes "Источники: https://github.com/DanielLavrushin/b4geoip/releases/latest, https://github.com/YOZH3G/ru-gaming-blocklist, geoexport.org (Xbox, Slack), v2fly/domain-list-community (Twitch)."

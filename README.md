@@ -4,8 +4,12 @@
 
 - **Gaming:** blizzard, bungie, ccp, electronicarts, epicgames, nintendo,
   play2go, riot, roblox, sony, taketwo, ubisoft, valve, wargaming, xbox
-- **Tech:** adobe, anthropic, apple, google
+- **Tech:** adobe, anthropic, apple, google, slack
 - **Streaming:** twitch
+
+Slack: [geosite:slack от v2fly на GeoExport](https://geoexport.org/?q=slack&tab=search&source=v2fly),
+11 доменов с поддоменами. На 17.11.2026 списки v2fly, Loyalsoldier и RuNet Freedom
+совпадают. `srs/slack.srs` обновляется ежедневно вместе с остальными наборами.
 
 ## Игровые наборы
 
