@@ -1,3 +1,5 @@
+from contextlib import redirect_stdout
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -5,10 +7,15 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from scripts.build_game_rulesets import ROOT, build, merge_rulesets, parse_list
+from scripts.build_game_rulesets import ROOT, DownloadError, build, merge_rulesets, parse_list
 
 
 class GameRulesetTests(unittest.TestCase):
+    def setUp(self):
+        self.enter_stdout = redirect_stdout(io.StringIO())
+        self.enter_stdout.__enter__()
+        self.addCleanup(self.enter_stdout.__exit__, None, None, None)
+
     def test_domains_and_networks_are_separate_alternatives(self):
         document = parse_list(
             "\ufeff# comment\n*.Example.COM\n.example.com\nlogin.example.com # login\n"
@@ -87,6 +94,70 @@ class GameRulesetTests(unittest.TestCase):
         self.assertEqual(len(set(game_ids)), 23)
         self.assertFalse(set(game_ids) & reserved)
         self.assertTrue(set(games["merge"]) <= reserved)
+
+    def test_unavailable_game_keeps_previous_and_updates_other_games(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "first.srs").write_bytes(b"previous first")
+            (output / "second.srs").write_bytes(b"previous second")
+
+            def download(url):
+                if url.endswith("First.txt"):
+                    raise DownloadError("source unavailable")
+                return "example.com"
+
+            def compile_one(command, check):
+                Path(command[-1]).write_bytes(b"updated second")
+
+            with patch("scripts.build_game_rulesets.fetch", side_effect=download), patch(
+                "scripts.build_game_rulesets.subprocess.run", side_effect=compile_one,
+            ):
+                retained = build({"repository": "test/repo", "ref": "main",
+                                  "files": ["First.txt", "Second.txt"]}, output, "sing-box")
+            self.assertEqual(retained, ["first"])
+            self.assertEqual((output / "first.srs").read_bytes(), b"previous first")
+            self.assertEqual((output / "second.srs").read_bytes(), b"updated second")
+
+    def test_unavailable_merge_restores_complete_previous_vendor_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            previous, output = root / "previous", root / "output"
+            previous.mkdir()
+            output.mkdir()
+            (previous / "riot.srs").write_bytes(b"old IPs and both game domain lists")
+            (output / "riot.srs").write_bytes(b"fresh GeoIP without game domains")
+            with patch("scripts.build_game_rulesets.fetch", side_effect=[
+                "example.com", DownloadError("second Riot source unavailable"),
+            ]), patch("scripts.build_game_rulesets.subprocess.run") as compiler:
+                retained = build({"repository": "test/repo", "ref": "main", "files": [],
+                                  "merge": {"riot": ["First.txt", "Second.txt"]}},
+                                 output, "sing-box", previous_output=previous)
+            compiler.assert_not_called()
+            self.assertEqual(retained, ["riot"])
+            self.assertEqual((output / "riot.srs").read_bytes(),
+                             (previous / "riot.srs").read_bytes())
+
+    def test_unavailable_game_without_previous_file_fails(self):
+        with tempfile.TemporaryDirectory() as temporary, patch(
+            "scripts.build_game_rulesets.fetch", side_effect=DownloadError("unavailable"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "no previous rule-set"):
+                build({"repository": "test/repo", "ref": "main", "files": ["New.txt"]},
+                      Path(temporary), "sing-box")
+
+    def test_unavailable_geoip_skips_vendor_merge_and_keeps_complete_previous_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "riot.srs").write_bytes(b"previous complete vendor")
+            with patch("scripts.build_game_rulesets.fetch") as download, patch(
+                "scripts.build_game_rulesets.subprocess.run",
+            ) as compiler:
+                build({"repository": "test/repo", "ref": "main", "files": [],
+                       "merge": {"riot": ["RiotGames_Valorant.txt"]}},
+                      output, "sing-box", skip_merge=["riot"])
+            download.assert_not_called()
+            compiler.assert_not_called()
+            self.assertEqual((output / "riot.srs").read_bytes(), b"previous complete vendor")
 
 
 if __name__ == "__main__":

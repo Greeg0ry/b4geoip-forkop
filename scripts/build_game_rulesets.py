@@ -2,6 +2,7 @@
 """Download curated game lists and compile domains and IP networks to .srs."""
 
 import argparse
+import http.client
 import ipaddress
 import json
 from pathlib import Path
@@ -10,7 +11,6 @@ import shutil
 import subprocess
 import tempfile
 import time
-import urllib.error
 import urllib.request
 
 
@@ -52,16 +52,36 @@ def parse_list(text):
     return {"version": 2, "rules": rules}
 
 
-def fetch(url):
+class DownloadError(RuntimeError):
+    """A source could not be downloaded after retries."""
+
+
+def fetch_bytes(url):
     request = urllib.request.Request(url, headers={"User-Agent": "b4geoip-forkop"})
     for attempt in range(3):
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
-                return response.read().decode("utf-8-sig")
-        except (urllib.error.URLError, TimeoutError):
+                return response.read()
+        except (OSError, http.client.HTTPException) as error:
             if attempt == 2:
-                raise
+                raise DownloadError(f"{url}: {error}") from error
             time.sleep(attempt + 1)
+
+
+def fetch(url):
+    return fetch_bytes(url).decode("utf-8-sig")
+
+
+def keep_previous(name, previous_output, output, error):
+    previous = previous_output / f"{name}.srs"
+    if not previous.is_file() or not previous.stat().st_size:
+        raise RuntimeError(f"{name}: download failed and no previous rule-set exists") from error
+    if previous != output / previous.name:
+        shutil.copyfile(previous, output / previous.name)
+    message = f"{name}: keeping previous rule-set; {error}"
+    # Escape workflow command data, including untrusted HTTP error messages.
+    message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    print(f"::warning::{message}", flush=True)
 
 
 def merge_rulesets(documents):
@@ -91,8 +111,10 @@ def merge_rulesets(documents):
     return {"version": 2, "rules": rules}
 
 
-def build(config, output, sing_box, source_dir=None):
+def build(config, output, sing_box, source_dir=None, previous_output=None, skip_merge=()):
     output.mkdir(parents=True, exist_ok=True)
+    previous_output = previous_output or output
+    retained = []
     with tempfile.TemporaryDirectory(prefix="game-rulesets-") as temporary:
         staging = Path(temporary)
 
@@ -121,21 +143,39 @@ def build(config, output, sing_box, source_dir=None):
             print(f"{name}: {domains} domains, {networks} networks", flush=True)
 
         for filename in config["files"]:
-            compile_ruleset(Path(filename).stem.lower(), load(filename))
+            name = Path(filename).stem.lower()
+            try:
+                document = load(filename)
+            except DownloadError as error:
+                keep_previous(name, previous_output, output, error)
+                retained.append(name)
+                continue
+            compile_ruleset(name, document)
 
         for name, filenames in config.get("merge", {}).items():
+            if name in skip_merge:
+                continue
+            try:
+                additions = [load(filename) for filename in filenames]
+            except DownloadError as error:
+                # Restore the complete previous vendor rule-set, not just the
+                # freshly converted GeoIP portion (which lacks game domains).
+                keep_previous(name, previous_output, output, error)
+                retained.append(name)
+                continue
             base = staging / f"{name}-base.json"
             subprocess.run(
                 [sing_box, "rule-set", "decompile", str(output / f"{name}.srs"),
                  "-o", str(base)], check=True,
             )
             documents = [json.loads(base.read_text(encoding="utf-8"))]
-            documents.extend(load(filename) for filename in filenames)
+            documents.extend(additions)
             compile_ruleset(name, merge_rulesets(documents))
 
-        # Publish only after every input has been downloaded, parsed and compiled.
+        # Compilation errors still prevent publishing partially compiled output.
         for binary in sorted(staging.glob("*.srs")):
             shutil.copyfile(binary, output / binary.name)
+    return retained
 
 
 def main():
